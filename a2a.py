@@ -30,8 +30,8 @@ import hashlib
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional
 
-from .core import AgentIdentity, UAHPCore, CompletionReceipt, AgentStatus
-from .reputation import ReputationEngine, TrustProfile
+from core import AgentIdentity, UAHPCore, CompletionReceipt, AgentStatus
+from reputation import ReputationEngine, TrustProfile
 
 
 @dataclass

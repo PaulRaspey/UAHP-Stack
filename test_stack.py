@@ -12,14 +12,12 @@ import os
 import time
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from uahp import (
-    UAHPCore, AgentIdentity, AgentStatus,
-    ReputationEngine, TrustProfile,
-    ComplianceEngine, RiskLevel,
-    A2AIntegration, A2AAgentCard,
-)
+from core import UAHPCore, AgentIdentity, AgentStatus, CompletionReceipt
+from reputation import ReputationEngine, TrustProfile
+from compliance import ComplianceEngine, RiskLevel
+from a2a import A2AIntegration, A2AAgentCard
 
 
 def test_full_stack():
@@ -163,7 +161,7 @@ def test_full_stack():
 
     # 13. MCP server tool test
     print("\n[11] MCP server tool routing...")
-    from uahp.mcp_server import handle_request
+    from mcp_server import handle_request
 
     # Test tools/list
     response = handle_request({

@@ -27,7 +27,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from .core import CompletionReceipt, UAHPCore
+from core import CompletionReceipt, UAHPCore
 
 
 @dataclass
@@ -103,7 +103,10 @@ class ReputationEngine:
             # Consistency: low variance relative to mean = good
             # coefficient of variation, capped
             cv = std_dev / mean_latency if mean_latency > 0 else 1.0
-            consistency_score = max(0.0, 1.0 - min(cv, 2.0) / 2.0)
+            cv_score = max(0.0, 1.0 - min(cv, 2.0) / 2.0)
+            # Latency penalty: agents slower than 30s get penalized
+            latency_penalty = 1.0 / (1.0 + math.exp(0.0002 * (mean_latency - 30000)))
+            consistency_score = cv_score * latency_penalty
         else:
             mean_latency = 0.0
             variance = 0.0

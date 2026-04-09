@@ -29,7 +29,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional
 from enum import Enum
 
-from .core import CompletionReceipt, AgentIdentity, UAHPCore
+from core import CompletionReceipt, AgentIdentity, UAHPCore
 
 
 class RiskLevel(Enum):

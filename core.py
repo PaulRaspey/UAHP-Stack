@@ -323,11 +323,16 @@ class UAHPCore:
         self._receipts.append(receipt)
         return receipt
 
-    def get_receipts(self, agent_id: Optional[str] = None) -> List[CompletionReceipt]:
-        """Retrieve completion receipts, optionally filtered by agent."""
+    def get_receipts(self, agent_id: Optional[str] = None,
+                      limit: Optional[int] = None) -> List[CompletionReceipt]:
+        """Retrieve completion receipts, optionally filtered by agent and limited."""
         if agent_id:
-            return [r for r in self._receipts if r.agent_id == agent_id]
-        return list(self._receipts)
+            results = [r for r in self._receipts if r.agent_id == agent_id]
+        else:
+            results = list(self._receipts)
+        if limit is not None and limit > 0:
+            results = results[-limit:]
+        return results
 
     def verify_receipt(self, receipt: CompletionReceipt, identity: AgentIdentity) -> bool:
         """Verify that a completion receipt was signed by the claimed agent."""

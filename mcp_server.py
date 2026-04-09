@@ -31,10 +31,10 @@ import time
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from .core import UAHPCore, AgentIdentity
-from .reputation import ReputationEngine
-from .compliance import ComplianceEngine, RiskLevel
-from .a2a import A2AIntegration, A2ATaskCompletion
+from core import UAHPCore, AgentIdentity
+from reputation import ReputationEngine
+from compliance import ComplianceEngine, RiskLevel
+from a2a import A2AIntegration, A2ATaskCompletion
 
 
 # Global state (persists for the lifetime of the MCP server process)
@@ -150,6 +150,17 @@ TOOLS = [
                 "agent_id": {"type": "string", "description": "Agent ID to generate card for"},
             },
             "required": ["agent_id"],
+        },
+    },
+    {
+        "name": "uahp_get_receipts",
+        "description": "Retrieve completion receipts for an agent, optionally limited to the N most recent.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agent_id": {"type": "string", "description": "Agent ID to filter by (omit for all agents)"},
+                "limit": {"type": "integer", "description": "Return only the N most recent receipts"},
+            },
         },
     },
     {
@@ -321,6 +332,27 @@ def handle_agent_card(params: Dict) -> Dict:
     return json.loads(_a2a.export_card_json(card))
 
 
+def handle_get_receipts(params: Dict) -> Dict:
+    agent_id = params.get("agent_id")
+    limit = params.get("limit")
+    receipts = _uahp.get_receipts(agent_id=agent_id, limit=limit)
+    return {
+        "receipts": [
+            {
+                "receipt_id": r.receipt_id,
+                "agent_id": r.agent_id,
+                "task_id": r.task_id,
+                "action": r.action,
+                "success": r.success,
+                "duration_ms": r.duration_ms,
+                "timestamp": r.timestamp,
+            }
+            for r in receipts
+        ],
+        "total": len(receipts),
+    }
+
+
 def handle_list_agents(params: Dict) -> Dict:
     agents = []
     for aid, identity in _identities.items():
@@ -343,6 +375,7 @@ TOOL_HANDLERS = {
     "uahp_trust_score": handle_trust_score,
     "uahp_compliance_report": handle_compliance_report,
     "uahp_agent_card": handle_agent_card,
+    "uahp_get_receipts": handle_get_receipts,
     "uahp_list_agents": handle_list_agents,
 }
 
