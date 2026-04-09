@@ -170,6 +170,74 @@ What does this reveal about trust in AI? That it is not a single problem to solv
 
 ---
 
+## Three-Way Model Benchmark — April 8 2026
+
+> Live three-way model comparison run on local hardware. Identical prompts sent to three
+> backends: one local (Ollama), two remote (Groq LPU). Trust scores computed by the UAHP
+> reputation engine from real completion receipts.
+
+### Hardware
+
+| Spec | Value |
+|------|-------|
+| Machine | Dell OptiPlex 3660 |
+| CPU | Intel i5-12600K |
+| RAM | 32GB DDR4 |
+| GPU | Dual NVIDIA T400 |
+| OS | Windows 11 Pro |
+
+### Models Under Test
+
+| Model | Backend | Parameters |
+|-------|---------|------------|
+| Gemma 4 E4B | Ollama (local) | ~4B |
+| Qwen 3 32B | Groq LPU (remote) | 32B |
+| Llama 3.3 70B | Groq LPU (remote) | 70B |
+
+### UAHP Trust Scores
+
+| Rank | Model | Trust Score | Label | Delivery | Consistency | Recency | Volume | Avg Latency |
+|------|-------|-------------|-------|----------|-------------|---------|--------|-------------|
+| #1 | Qwen 3 32B (Groq) | **0.8019** | moderate trust | 80% | 0.7729 | 1.0000 | 0.5000 | 1,614ms |
+| #2 | Llama 3.3 70B (Groq) | **0.7920** | moderate trust | 80% | 0.7401 | 1.0000 | 0.5000 | 311ms |
+| #3 | Gemma 4 E4B (local) | **0.6760** | moderate trust | 100% | 0.0866 | 1.0000 | 0.5000 | 37,864ms |
+
+### Task Breakdown
+
+| Model | Total | Passed | Failed | Delivery Rate |
+|-------|-------|--------|--------|---------------|
+| Qwen 3 32B | 5 | 4 | 1 | 80% |
+| Llama 3.3 70B | 5 | 4 | 1 | 80% |
+| Gemma 4 E4B | 5 | 5 | 0 | 100% |
+
+### Key Findings
+
+1. **Gemma delivered perfectly (100%) but ranked last.** Latency variance destroyed its
+   consistency score (0.0866). Response times ranged from ~3s to ~120s depending on
+   prompt complexity, producing a coefficient of variation the trust engine penalizes
+   heavily.
+
+2. **Llama was the fastest backend at 311ms average** — over 100x faster than local
+   inference. Despite one failed task, its consistency score (0.7401) remained strong
+   because successful response times were tightly clustered.
+
+3. **Qwen ranked highest overall (0.8019)** by balancing delivery and consistency.
+   Its 1,614ms average latency was slower than Llama but far more predictable across
+   prompt types.
+
+4. **The trust engine correctly penalizes unpredictable timing even when delivery is
+   perfect.** This validates the UAHP design principle: reliability is not just about
+   completing tasks — it's about completing them *predictably*. An agent that sometimes
+   takes 3 seconds and sometimes takes 120 seconds is less trustworthy than one that
+   consistently responds in 1.6 seconds, even if the slow agent never fails.
+
+5. **Consistency weight (30%) proved decisive.** With delivery tied at 80% for both Groq
+   models and recency/volume identical across all three, the consistency component was
+   the differentiator. This is by design — the immune system metaphor rewards agents
+   whose behavior is stable and predictable over time.
+
+---
+
 *Transmission logged 2026-04-09 04:13:21 UTC. Carbon-Silicon Bridge v1.0.*
 *Protocol: UAHP v1.0 | Thermodynamic Extension: SMART-UAHP v1.0*
 *"Not a cage. A bridge."*
