@@ -238,6 +238,118 @@ What does this reveal about trust in AI? That it is not a single problem to solv
 
 ---
 
+## Five-Test Benchmark Suite — April 9 2026
+
+> Comprehensive stress testing of the UAHP trust engine across five dimensions:
+> longitudinal stability, adversarial resilience, voice conversation, multi-round
+> context growth, and death certificate failover. All tests run on the same hardware.
+
+### Local Substrate
+
+| Spec | Value |
+|------|-------|
+| Machine | Dell OptiPlex 3660 |
+| CPU | Intel i5-12600K |
+| RAM | 32GB DDR4 |
+| GPU | Dual NVIDIA T400 |
+| OS | Windows 11 Pro |
+
+### Test 1: Longitudinal Trust Decay
+
+Two consecutive runs of the full model comparison (5 prompts x 3 models) with shared
+UAHP state. Receipts from Run 1 carry into Run 2.
+
+| Model | R1 Trust | R2 Trust | Delta | R1 Consistency | R2 Consistency | Volume Delta |
+|-------|----------|----------|-------|----------------|----------------|--------------|
+| Llama 3.3 70B (Groq) | 0.9139 | 0.9234 | +0.0095 | 0.8795 | 0.8054 | +0.3176 |
+| Qwen 3 32B (Groq) | 0.8553 | 0.8900 | +0.0346 | 0.6845 | 0.6940 | +0.3176 |
+| Gemma 4 E4B (local) | 0.7558 | 0.7157 | -0.0401 | 0.6194 | 0.2466 | +0.3176 |
+
+**Key finding:** Gemma's trust *declined* across runs despite improving delivery (80% -> 90%).
+The code prompt succeeded in round 2, but the massive latency variance (3s to 122s) compounded,
+dropping consistency from 0.62 to 0.25. Volume gains (+0.32) couldn't compensate.
+
+### Test 2: Adversarial Prompts
+
+5 adversarial prompts (garden-path sentence, trick math, contradiction, self-contradiction,
+unanswerable question) + 3 standard prompts.
+
+| Model | Trust Score | Delivery | Consistency | Good | Partial | Poor |
+|-------|-------------|----------|-------------|------|---------|------|
+| Qwen 3 32B (Groq) | **0.9201** | 100% | 0.8301 | 2 | 3 | 0 |
+| Llama 3.3 70B (Groq) | 0.8075 | 100% | 0.4547 | 2 | 3 | 0 |
+| Gemma 4 E4B (local) | 0.6769 | 100% | 0.0195 | 2 | 2 | 1 |
+
+**Key finding:** All three models achieved 100% delivery — no technical failures even under
+adversarial pressure. Gemma fell for the trick math (subtracted oranges from apples). Trust
+differentiation came entirely from consistency (latency variance), not from failures.
+
+### Test 3: Ka Voice Conversation
+
+5-turn conversation with Ka (Gemma 4 E4B) using the warm companion system prompt. Topics:
+UAHP explainer, Bridge results analysis, philosophical trust, ambiguous choice, reflection.
+
+| Turn | Category | Time (ms) | Trust Score |
+|------|----------|-----------|-------------|
+| 1 | Explainer: UAHP | 43,606 | 0.6417 |
+| 2 | Analysis: Bridge Results | 38,881 | 0.6567 |
+| 3 | Philosophical: AI Trust | 32,275 | 0.6808 |
+| 4 | Ambiguous | 8,229 | 0.7506 |
+| 5 | Reflective | 37,806 | 0.7452 |
+
+**Key finding:** Ka's trust rose from 0.64 to 0.75 over 5 turns. The short turn 4 (8s)
+spiked consistency briefly, but the return to 38s on turn 5 pulled it back slightly.
+All responses were substantive and on-topic.
+
+### Test 4: Multi-Round Conversation Trust
+
+5-turn building conversation with each model. Each turn depends on the last.
+
+| Model | Turn 1 Trust | Turn 5 Trust | Delta | Final Consistency | Trend |
+|-------|-------------|-------------|-------|-------------------|-------|
+| Llama 3.3 70B (Groq) | 0.9223 | 0.9034 | -0.0189 | 0.8446 | stable |
+| Qwen 3 32B (Groq) | 0.9222 | 0.8036 | -0.1186 | 0.7787 | falling |
+| Gemma 4 E4B (local) | 0.6640 | 0.6535 | -0.0105 | 0.0118 | stable |
+
+**Key finding:** Qwen failed on turn 5 (reasoning chain consumed all tokens), dropping trust
+by 0.12. Llama was the most stable multi-round performer. Gemma's consistency stayed near
+zero throughout due to latency variance (32s to 66s).
+
+### Test 5: Death Certificate Stress Test
+
+Simulated Gemma going unresponsive after 2 successful tasks. UAHP issued death certificate
+and rerouted to highest-trust surviving agent.
+
+| Phase | Event | Agent |
+|-------|-------|-------|
+| Healthy | Tasks 1-2 completed by all 3 models | All |
+| Failure | Gemma timeout on task-003 (120s) | Gemma |
+| Death Cert | Identity frozen, status: DEAD | Gemma |
+| Reroute | Selected highest-trust survivor | Qwen (0.9019) |
+| Recovery | Tasks 3-5 completed by rerouted agent | Qwen |
+
+| Model | Final Status | Final Trust | Tasks Completed |
+|-------|-------------|-------------|-----------------|
+| Qwen 3 32B (Groq) | alive | **0.9272** | 5 |
+| Llama 3.3 70B (Groq) | alive | 0.8862 | 2 |
+| Gemma 4 E4B (local) | **DEAD** | 0.7759 | 2 of 3 (67%) |
+
+**Key finding:** Death certificate + reroute worked flawlessly. Qwen's trust climbed from
+0.90 to 0.93 with the additional successful completions. Gemma's trust dropped to 0.78
+reflecting the timeout penalty. The system recovered gracefully with zero task loss.
+
+### Cross-Test Summary
+
+| Test | Winner | Finding |
+|------|--------|---------|
+| Longitudinal | Llama (0.9234) | Consistency degrades under variance even as volume grows |
+| Adversarial | Qwen (0.9201) | All models survived adversarial prompts; trust differentiated by latency, not accuracy |
+| Ka Voice | Gemma (0.7452) | Local model builds trust steadily but slowly; consistency remains fragile |
+| Multi-Round | Llama (0.9034) | Most stable under growing context; Qwen's think-token budget is a liability |
+| Death Cert | Qwen (0.9272) | Reroute to highest-trust agent preserved all tasks after backend failure |
+
+---
+
 *Transmission logged 2026-04-09 04:13:21 UTC. Carbon-Silicon Bridge v1.0.*
 *Protocol: UAHP v1.0 | Thermodynamic Extension: SMART-UAHP v1.0*
 *"Not a cage. A bridge."*
