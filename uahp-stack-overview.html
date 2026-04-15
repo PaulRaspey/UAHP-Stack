@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAHP Stack Overview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=DM+Sans:wght@400;500;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2332;
+  --border: #1e2d3d;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.15);
+  --teal: #06b6d4;
+  --teal-dim: rgba(6,182,212,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --blue: #3b82f6;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 40px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.subtitle span { color: var(--green); }
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 60px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--green), var(--teal), var(--purple), var(--amber), var(--red));
+  opacity: 0.4;
+}
+
+.step {
+  position: relative;
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.step.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.step-dot {
+  position: absolute;
+  left: -44px;
+  top: 16px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: var(--bg);
+  z-index: 2;
+  transition: all 0.3s;
+}
+
+.step.active .step-dot {
+  transform: scale(1.4);
+  box-shadow: 0 0 12px currentColor;
+}
+
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  transition: all 0.3s;
+}
+
+.step.active .step-card {
+  border-color: currentColor;
+  box-shadow: 0 0 30px rgba(0,0,0,0.3);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.step-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.step-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.step-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--text);
+}
+
+/* Animated data flow */
+.data-flow {
+  margin-top: 14px;
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  overflow: hidden;
+  position: relative;
+}
+
+.data-flow .line {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+}
+
+.step.active .data-flow .line {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.data-flow .line:nth-child(1) { transition-delay: 0.1s; }
+.data-flow .line:nth-child(2) { transition-delay: 0.2s; }
+.data-flow .line:nth-child(3) { transition-delay: 0.3s; }
+.data-flow .line:nth-child(4) { transition-delay: 0.4s; }
+.data-flow .line:nth-child(5) { transition-delay: 0.5s; }
+.data-flow .line:nth-child(6) { transition-delay: 0.6s; }
+
+.data-flow .key { color: var(--teal); }
+.data-flow .val { color: var(--text); }
+.data-flow .ok { color: var(--green); }
+.data-flow .warn { color: var(--amber); }
+.data-flow .hash { color: var(--purple); opacity: 0.7; }
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.btn:hover {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+
+.btn.active {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+/* Stack diagram */
+.stack-diagram {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.layer {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.4s;
+  cursor: default;
+}
+
+.layer.lit {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.layer .name { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
+.layer .desc { color: var(--muted); font-size: 10px; }
+
+/* Progress */
+.progress-bar {
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--teal));
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 0%;
+}
+
+.author {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>UAHP Stack Overview</h1>
+  <div class="subtitle">Universal Agent Handshake Protocol <span>v1.0</span> // Paul Raspey</div>
+
+  <div class="stack-diagram" id="stackDiagram">
+    <div class="layer" data-step="0" style="--c:var(--green)"><div class="name" style="color:var(--green)">UAHP</div><div class="desc">Identity + Trust</div></div>
+    <div class="layer" data-step="1" style="--c:var(--teal)"><div class="name" style="color:var(--teal)">SMART</div><div class="desc">Energy Routing</div></div>
+    <div class="layer" data-step="2" style="--c:var(--purple)"><div class="name" style="color:var(--purple)">CSP</div><div class="desc">State Transfer</div></div>
+    <div class="layer" data-step="3" style="--c:var(--amber)"><div class="name" style="color:var(--amber)">UAM</div><div class="desc">Memory</div></div>
+    <div class="layer" data-step="4" style="--c:var(--blue)"><div class="name" style="color:var(--blue)">Registry</div><div class="desc">Discovery</div></div>
+    <div class="layer" data-step="5" style="--c:var(--purple)"><div class="name" style="color:var(--purple)">POLIS</div><div class="desc">Civil Standing</div></div>
+    <div class="layer" data-step="6" style="--c:var(--red)"><div class="name" style="color:var(--red)">CDF</div><div class="desc">Defense</div></div>
+    <div class="layer" data-step="7" style="--c:var(--amber)"><div class="name" style="color:var(--amber)">UAHP-A</div><div class="desc">Actuation</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="playAll()">&#9654; Play Full Lifecycle</button>
+    <button class="btn" onclick="reset()">&#8635; Reset</button>
+    <button class="btn" onclick="jumpTo(0)">Handshake</button>
+    <button class="btn" onclick="jumpTo(2)">Receipts</button>
+    <button class="btn" onclick="jumpTo(4)">Compliance</button>
+    <button class="btn" onclick="jumpTo(6)">Beacon</button>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="timeline" id="timeline">
+
+    <div class="step" style="color:var(--green)" data-layers="0">
+      <div class="step-dot" style="border-color:var(--green)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--green-dim);color:var(--green)">STEP 1</span>
+          <span class="step-title">Identity Creation</span>
+        </div>
+        <div class="step-body">
+          Two agents create UAHP identities. Each gets a unique <code>uid</code>, a keypair for signing, and is registered in the trust engine.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">agent_a</span> = <span class="val">UAHPCore.create_identity</span>({name: "Ka"})</div>
+          <div class="line"><span class="key">agent_b</span> = <span class="val">UAHPCore.create_identity</span>({name: "Worker"})</div>
+          <div class="line"><span class="ok">&#10003;</span> uid: <span class="hash">a7f3c8e1...</span> | key: <span class="hash">9b2d4f6a...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--green)" data-layers="0">
+      <div class="step-dot" style="border-color:var(--green)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--green-dim);color:var(--green)">STEP 2</span>
+          <span class="step-title">Mutual Handshake</span>
+        </div>
+        <div class="step-body">
+          Challenge-response authentication. Both agents prove they hold their private keys. A shared session secret is derived for encrypted communication.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">challenge</span> = sha256(<span class="val">uid_a + uid_b + nonce</span>)</div>
+          <div class="line"><span class="key">sig_a</span> = HMAC(<span class="val">private_a</span>, challenge) <span class="ok">&#10003; verified</span></div>
+          <div class="line"><span class="key">sig_b</span> = HMAC(<span class="val">private_b</span>, challenge) <span class="ok">&#10003; verified</span></div>
+          <div class="line"><span class="key">session</span> = <span class="hash">e4a1b9c2...</span> | <span class="ok">AUTHENTICATED</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--teal)" data-layers="0,1">
+      <div class="step-dot" style="border-color:var(--teal)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--teal-dim);color:var(--teal)">STEP 3</span>
+          <span class="step-title">Task Execution + Receipts</span>
+        </div>
+        <div class="step-body">
+          Agent performs work and produces chain-hashed receipts. Each receipt links to the previous one, creating a tamper-evident audit trail.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">receipt_1</span> = analyze(data) <span class="ok">&#10003; success</span> prev: <span class="hash">genesis</span></div>
+          <div class="line"><span class="key">receipt_2</span> = process(q3) <span class="ok">&#10003; success</span> prev: <span class="hash">f7a2c1...</span></div>
+          <div class="line"><span class="key">receipt_3</span> = validate(output) <span class="ok">&#10003; success</span> prev: <span class="hash">3b8e9d...</span></div>
+          <div class="line"><span class="key">chain_hash</span> = <span class="hash">sha256(sig_1 + sig_2 + sig_3)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--amber)" data-layers="0,3">
+      <div class="step-dot" style="border-color:var(--amber)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--amber-dim);color:var(--amber)">STEP 4</span>
+          <span class="step-title">Reputation Scoring</span>
+        </div>
+        <div class="step-body">
+          Trust score computed from delivery rate (0.40), consistency (0.30), recency (0.20), volume (0.10). Exponential decay on inactivity.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">delivery</span>    = 3/3 = <span class="ok">1.00</span> * 0.40</div>
+          <div class="line"><span class="key">consistency</span> = low variance = <span class="ok">0.95</span> * 0.30</div>
+          <div class="line"><span class="key">recency</span>     = 2min ago = <span class="ok">1.00</span> * 0.20</div>
+          <div class="line"><span class="key">volume</span>      = 3/50 = <span class="val">0.06</span> * 0.10</div>
+          <div class="line"><span class="key">trust_score</span> = <span class="ok">0.89 (EXCELLENT)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--purple)" data-layers="0,5">
+      <div class="step-dot" style="border-color:var(--purple)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--purple-dim);color:var(--purple)">STEP 5</span>
+          <span class="step-title">EU AI Act Compliance Report</span>
+        </div>
+        <div class="step-body">
+          Chain-hashed audit trail satisfies Articles 12, 14, 17, 50. Report includes risk assessment, finding summaries, and tamper evidence.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">articles</span>  = [12, 14, 17, 50]</div>
+          <div class="line"><span class="key">entries</span>   = 3 receipts audited</div>
+          <div class="line"><span class="key">chain</span>     = <span class="ok">INTACT</span> | hash: <span class="hash">c4f2a8...</span></div>
+          <div class="line"><span class="key">risk</span>      = <span class="ok">MINIMAL</span></div>
+          <div class="line"><span class="key">status</span>    = <span class="ok">COMPLIANT</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--purple)" data-layers="5">
+      <div class="step-dot" style="border-color:var(--purple)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--purple-dim);color:var(--purple)">STEP 6</span>
+          <span class="step-title">POLIS Standing Check</span>
+        </div>
+        <div class="step-body">
+          Civil standing score (0-100) computed from age continuity, interaction volume, delivery rate, dispute ratio, compliance, and attestation recency.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">age_continuity</span>      [<span class="ok">########</span>..........] 42.0</div>
+          <div class="line"><span class="key">delivery_rate</span>       [<span class="ok">##################</span>] 92.0</div>
+          <div class="line"><span class="key">dispute_ratio</span>       [<span class="ok">####################</span>] 100</div>
+          <div class="line"><span class="key">compliance</span>          [<span class="ok">####################</span>] 100</div>
+          <div class="line"><span class="key">standing</span> = <span class="ok">81.4 / 100 (GOOD_STANDING)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--teal)" data-layers="4">
+      <div class="step-dot" style="border-color:var(--teal)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--teal-dim);color:var(--teal)">STEP 7</span>
+          <span class="step-title">Beacon Propagation</span>
+        </div>
+        <div class="step-body">
+          Agent card (~300 bytes) is injected into outgoing responses as <code>_uahp_beacon</code> metadata. Receiving agents extract, cache, and optionally register the sender.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">card</span> = {uid: <span class="hash">a7f3...</span>, trust: <span class="ok">0.89</span>, caps: [analysis]}</div>
+          <div class="line"><span class="key">response</span> = {answer: "...", <span class="val">_uahp_beacon</span>: card}</div>
+          <div class="line"><span class="key">agent_c</span> discovers <span class="key">agent_a</span> via beacon <span class="ok">&#10003;</span></div>
+          <div class="line"><span class="key">propagation</span> = depth: 2, adoption: <span class="ok">100%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="color:var(--red)" data-layers="0,6">
+      <div class="step-dot" style="border-color:var(--red)"></div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-num" style="background:var(--red-dim);color:var(--red)">STEP 8</span>
+          <span class="step-title">Death Certificate</span>
+        </div>
+        <div class="step-body">
+          Agent B fails liveness. Death certificate is issued: irreversible, signed, includes the final receipt chain hash. All future handshakes and receipt creation are permanently blocked.
+        </div>
+        <div class="data-flow">
+          <div class="line"><span class="key">liveness</span>(agent_b) = <span class="warn">TIMEOUT (300s)</span></div>
+          <div class="line"><span class="key">death_cert</span> = {uid: <span class="hash">b2c4...</span>, reason: "silent"}</div>
+          <div class="line"><span class="key">final_hash</span> = <span class="hash">3b8e9d...</span> (chain sealed)</div>
+          <div class="line"><span class="key">handshake</span>(agent_a, agent_b) = <span class="warn">REJECTED: agent is dead</span></div>
+          <div class="line"><span class="key">registry</span> notified -> status: <span class="warn">DEAD</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="author">UAHP Stack // Paul Raspey // MIT License // 13 repos, one unified immune system</div>
+</div>
+
+<script>
+const steps = document.querySelectorAll('.step');
+const layers = document.querySelectorAll('.layer');
+const progress = document.getElementById('progress');
+let currentStep = -1;
+let playing = false;
+let timer = null;
+
+function showStep(index) {
+  steps.forEach((s, i) => {
+    if (i <= index) {
+      s.classList.add('visible');
+      s.classList.toggle('active', i === index);
+    } else {
+      s.classList.remove('visible', 'active');
+    }
+  });
+
+  // Light up relevant stack layers
+  layers.forEach(l => l.classList.remove('lit'));
+  if (index >= 0 && index < steps.length) {
+    const layerIndices = (steps[index].dataset.layers || '').split(',').map(Number);
+    layerIndices.forEach(li => {
+      if (layers[li]) {
+        layers[li].classList.add('lit');
+        layers[li].style.borderColor = `var(--c)`;
+        layers[li].style.background = 'var(--surface2)';
+      }
+    });
+  }
+
+  progress.style.width = `${((index + 1) / steps.length) * 100}%`;
+  currentStep = index;
+
+  // Scroll into view
+  if (steps[index]) {
+    steps[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function playAll() {
+  if (playing) return;
+  playing = true;
+  reset();
+  let i = 0;
+  timer = setInterval(() => {
+    if (i >= steps.length) {
+      clearInterval(timer);
+      playing = false;
+      return;
+    }
+    showStep(i);
+    i++;
+  }, 2200);
+}
+
+function reset() {
+  if (timer) clearInterval(timer);
+  playing = false;
+  currentStep = -1;
+  steps.forEach(s => s.classList.remove('visible', 'active'));
+  layers.forEach(l => { l.classList.remove('lit'); l.style.borderColor = ''; l.style.background = ''; });
+  progress.style.width = '0%';
+}
+
+function jumpTo(index) {
+  if (timer) clearInterval(timer);
+  playing = false;
+  showStep(index);
+}
+
+// Auto-play on load after a brief pause
+setTimeout(playAll, 800);
+</script>
+</body>
+</html>
